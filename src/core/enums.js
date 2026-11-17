@@ -133,4 +133,10 @@ export const OBLIGATION_KINDS = pairs({
 });
 export const OBLIGATION_STATUS = pairs({ upcoming: '납부 예정', paid: '납부 완료' });
 
-export const SEVERITY = pairs({ high: '높음', medium: '보통', low: '낮음', info: '참고' });
+// Where a number came from. Only bank_csv is "verified".
+export const DATA_SOURCES = pairs({
+  bank_csv: '은행 내역 파일 (검증)',
+  manual: '직접 입력',
+});
+
+export const SEVERITY =pairs({ high: '높음', medium: '보통', low: '낮음', info: '참고' });

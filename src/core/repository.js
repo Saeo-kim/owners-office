@@ -61,6 +61,13 @@ function coerce(spec, raw) {
   }
 }
 
+// Columns the app manages itself (not editable in forms) but that must
+// survive export → import.
+const SYSTEM_COLUMNS = {
+  accounts: ['source'],
+  transactions: ['source', 'import_key', 'needs_review'],
+};
+
 export function createRepository(db) {
   const tx = (fn) => {
     db.exec('BEGIN');
@@ -140,8 +147,13 @@ export function createRepository(db) {
     const existing = get(name, id);
     const record = validate(name, input, existing);
     const cols = Object.keys(record);
+    // A hand-edited balance is no longer the bank's number; a hand-edited
+    // imported transaction counts as reviewed.
+    const extra = [];
+    if (name === 'accounts' && record.balance !== existing.balance) extra.push("source = 'manual'");
+    if (name === 'transactions') extra.push('needs_review = 0');
     db.run(
-      `UPDATE ${d.table} SET ${cols.map((c) => `${c} = ?`).join(', ')}, updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id = ?`,
+      `UPDATE ${d.table} SET ${[...cols.map((c) => `${c} = ?`), ...extra].join(', ')}, updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id = ?`,
       [...cols.map((c) => record[c]), existing.id],
     );
     return get(name, id);
@@ -233,6 +245,7 @@ export function createRepository(db) {
             if (err instanceof ValidationError) throw new ValidationError({ _: `${RESOURCES[name].label} #${row.id}: ${err.message}` });
             throw err;
           }
+          for (const c of SYSTEM_COLUMNS[name] ?? []) if (row[c] !== undefined && row[c] !== null) record[c] = row[c];
           const cols = Object.keys(record);
           db.run(
             `INSERT INTO ${RESOURCES[name].table} (id, ${cols.join(', ')}, is_demo) VALUES (?, ${cols.map(() => '?').join(', ')}, ?)`,
@@ -246,5 +259,44 @@ export function createRepository(db) {
     });
   }
 
-  return { tx, validate, list, get, create, update, remove, getSettings, saveSettings, loadData, counts, deleteDemo, exportAll, importAll };
+  // Bank statement import. `rows` arrive already parsed (see bankcsv.js).
+  // Nothing is sent to a bank; this only records what the file says.
+  function importBankStatement({ account_id, rows, keys, closing, dry_run = false } = {}) {
+    if (!account_id) throw new ValidationError({ account_id: '가져올 계좌를 선택하세요.' });
+    const account = get('accounts', account_id);
+    if (!Array.isArray(rows) || !rows.length) throw new ValidationError({ rows: '가져올 거래가 없습니다.' });
+    if (!Array.isArray(keys) || keys.length !== rows.length) throw new ValidationError({ keys: '중복 확인 키가 없습니다.' });
+    if (rows.length > 20000) throw new ValidationError({ rows: '한 번에 20,000건까지 가져올 수 있습니다.' });
+    const exists = (k) => db.get('SELECT id FROM transactions WHERE account_id = ? AND import_key = ?', [account.id, k]);
+    const run = () => {
+      let created = 0;
+      let duplicates = 0;
+      rows.forEach((r, i) => {
+        const key = String(keys[i]).slice(0, 500);
+        if (exists(key)) { duplicates++; return; }
+        // Unclassified until reviewed: never counted as 사업 매출 or 사업 비용.
+        const base = r.direction === 'income'
+          ? { income_type: 'personal_other' }
+          : { scope: 'personal', cost_nature: 'variable', cost_class: 'other' };
+        const record = validate('transactions', { date: r.date, direction: r.direction, amount: r.amount, description: r.description ?? '', account_id: account.id, ...base });
+        created++;
+        if (dry_run) return;
+        const cols = Object.keys(record);
+        db.run(
+          `INSERT INTO transactions (${cols.join(', ')}, source, import_key, needs_review, is_demo) VALUES (${cols.map(() => '?').join(', ')}, 'bank_csv', ?, 1, 0)`,
+          [...cols.map((c) => record[c]), key],
+        );
+      });
+      let balanceUpdated = false;
+      const newer = !account.as_of || account.source !== 'bank_csv' || (closing?.as_of ?? '') >= account.as_of;
+      if (!dry_run && closing && Number.isInteger(closing.balance) && closing.as_of && newer) {
+        db.run("UPDATE accounts SET balance = ?, as_of = ?, source = 'bank_csv', updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id = ?", [closing.balance, closing.as_of, account.id]);
+        balanceUpdated = true;
+      }
+      return { created, duplicates, balanceUpdated, dry_run: Boolean(dry_run), account: get('accounts', account.id) };
+    };
+    return dry_run ? run() : tx(run);
+  }
+
+  return { tx, validate, list, get, create, update, remove, importBankStatement, getSettings, saveSettings, loadData, counts, deleteDemo, exportAll, importAll };
 }

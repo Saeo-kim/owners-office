@@ -115,6 +115,21 @@ function connect(wsUrl) {
   });
 }
 
+// Node can decode EUC-KR/CP949 but not encode it; invert the decoder.
+function encodeCp949(text) {
+  const dec = new TextDecoder('euc-kr');
+  const map = new Map();
+  for (let a = 0x81; a <= 0xfe; a++) {
+    for (let b = 0x41; b <= 0xfe; b++) {
+      const ch = dec.decode(new Uint8Array([a, b]));
+      if (ch.length === 1 && ch !== '�' && !map.has(ch)) map.set(ch, [a, b]);
+    }
+  }
+  const out = [];
+  for (const ch of text) out.push(...(ch.charCodeAt(0) < 0x80 ? [ch.charCodeAt(0)] : map.get(ch) ?? [0x3f]));
+  return Buffer.from(out);
+}
+
 async function main() {
   const base = process.env.E2E_URL ?? ((process.env.E2E_DIST || process.argv.includes('--dist')) ? await startStatic() : await startServer());
   const cdp = await connect(await startBrowser());
@@ -143,7 +158,7 @@ async function main() {
 
   await cdp.send('Page.navigate', { url: `${base}#/dashboard` });
   check(await waitFor(loaded, 30000), 'app loads');
-  const screens = ['dashboard', 'finance/transactions', 'finance/cashflow', 'finance/ventures', 'finance/accounts', 'finance/targets', 'employees', 'ventures', 'goals', 'productivity', 'audit', 'settings'];
+  const screens = ['cash', 'playbook', 'help', 'dashboard', 'finance/transactions', 'finance/cashflow', 'finance/ventures', 'finance/accounts', 'finance/targets', 'employees', 'ventures', 'goals', 'productivity', 'audit', 'settings'];
   for (const [label, width, height, mobile] of [['desktop', 1440, 1000, false], ['phone', 375, 800, true]]) {
     await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile });
     for (const s of screens) {
@@ -158,9 +173,12 @@ async function main() {
   await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
 
   // Create a real transaction through the form, then edit and delete it.
+  // Wait for *this* page: the previous screen also satisfies `loaded`, and
+  // clicking its soon-to-be-replaced topbar button does nothing.
   await evaluate(`location.hash = '#/finance/transactions'`);
-  await waitFor(loaded);
-  await evaluate(`document.querySelector('[data-new="transactions"]').click()`);
+  await waitFor(`document.title.startsWith('Finance') && ${loaded} && !!document.querySelector('#topbar-actions [data-new="transactions"]')`);
+  await sleep(300);
+  await evaluate(`document.querySelector('#topbar-actions [data-new="transactions"]').click()`);
   check(await waitFor(`document.getElementById('dialog').open`), 'form opens');
   await evaluate(`(() => {
     const f = document.querySelector('#dialog form');
@@ -189,6 +207,28 @@ async function main() {
   await evaluate(`(() => { const f = document.querySelector('#dialog form'); f.elements.amount.value = ''; f.querySelector('[type=submit]').click(); })()`);
   check(await waitFor(`!!document.querySelector('#dialog .field.invalid')`), 'validation errors shown in form');
   await evaluate(`document.querySelector('#dialog [data-close]').click()`);
+
+  // Bank statement import on the Cash Desk: a CP949 (EUC-KR) file like
+  // Korean banks export, preview → import → balance marked verified.
+  if (!process.env.E2E_URL && !process.env.E2E_DIST && !process.argv.includes('--dist')) {
+    const { writeFileSync } = await import('node:fs');
+    const csv = join(tmp, 'statement.csv');
+    const text = '"거래일시","적요","출금액","입금액","잔액"\r\n"2026.11.15 18:02","카페","5,800","0","994,200"\r\n"2026.11.10 09:00","E2E 고객 입금","0","9,900","1,000,000"\r\n';
+    writeFileSync(csv, encodeCp949(text));
+    await evaluate(`fetch('/api/accounts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'E2E 입출금', kind: 'bank', balance: 0, as_of: '2026-11-01' }) }).then(r => r.ok)`);
+    await evaluate(`location.hash = '#/cash'`);
+    await waitFor(`document.title.startsWith('Cash') && !!document.getElementById('bi-file')`);
+    await evaluate(`(() => { const s = document.getElementById('bi-account'); s.value = [...s.options].find(o => o.text === 'E2E 입출금').value; })()`);
+    const { root: doc } = await cdp.send('DOM.getDocument');
+    const { nodeId } = await cdp.send('DOM.querySelector', { nodeId: doc.nodeId, selector: '#bi-file' });
+    await cdp.send('DOM.setFileInputFiles', { nodeId, files: [csv] });
+    check(await waitFor(`!!document.getElementById('bi-go') && document.getElementById('bi-preview').textContent.includes('E2E 고객 입금')`), 'bank CSV (CP949) preview shows decoded Korean rows');
+    await shot('desktop-cash-import-preview');
+    await evaluate(`document.getElementById('bi-go').click()`);
+    check(await waitFor(`[...document.querySelectorAll('main tr')].some(r => r.textContent.includes('E2E 입출금') && r.textContent.includes('은행 내역 검증') && r.textContent.includes('994,200'))`), 'import sets verified balance from newest row');
+    check(await waitFor(`document.querySelector('main').textContent.includes('분류 대기')`), 'imported rows wait for classification');
+    await shot('desktop-cash-after-import');
+  }
 
   // Demo data can be removed in one step and real data survives.
   await evaluate(`location.hash = '#/settings'`);

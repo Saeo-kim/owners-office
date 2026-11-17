@@ -92,6 +92,7 @@ export const RESOURCES = {
       cost_class: choice('비용 분류', E.COST_CLASSES, { showIf: isExpense }),
       venture_id: ref('관련 사업', 'ventures'),
       employee_id: ref('관련 직원 (유지비 지급)', 'employees', { showIf: isExpense }),
+      account_id: ref('계좌 (선택)', 'accounts'),
       description: text('내용', { max: 200 }),
     },
     check(r, errors) {

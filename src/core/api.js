@@ -141,6 +141,7 @@ export function createApi({ repo, now = () => new Date(), mode = 'server' }) {
     }
     if (head === 'export' && method === 'GET') return repo.exportAll();
     if (head === 'import' && method === 'POST') return repo.importAll(body);
+    if (head === 'bank-import' && method === 'POST' && id === undefined) return repo.importBankStatement(body ?? {});
     if (isResource(head)) {
       if (id === undefined) {
         if (method === 'GET') return repo.list(head, { includeDemo: query.demo === 'all' ? true : repo.getSettings().include_demo });

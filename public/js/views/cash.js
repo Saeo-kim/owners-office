@@ -3,8 +3,13 @@
 //   2. 약속 (promised) – contracts and invoices not yet paid, taxes not yet due
 //   3. 예상 (estimate) – venture forecasts and hypotheses
 // Nothing from zone 2 or 3 is ever added to a zone-1 number.
-import { RECEIVABLE_STATUS, OBLIGATION_KINDS, OBLIGATION_STATUS } from '../../core/enums.js';
-import { html, kind, kpi, label, pill, rowActions, table, won } from '../ui.js';
+import { RECEIVABLE_STATUS, OBLIGATION_KINDS, OBLIGATION_STATUS, ACCOUNT_KINDS } from '../../core/enums.js';
+import { html, kind, kpi, label, pill, rowActions, table, toast, won } from '../ui.js';
+import { importKeys, parseBankStatement } from '../../core/bankcsv.js';
+
+// Provenance badge: only numbers read from a bank's own statement file are "검증".
+const srcPill = (s) => (s === 'bank_csv' ? pill('은행 내역 검증', 'good') : pill('직접 입력', 'warn'));
+const daysBetween = (a, b) => Math.round((new Date(`${b}T00:00:00`) - new Date(`${a}T00:00:00`)) / 86400000);
 
 // A planning assumption, shown with its formula. Confirm the real rate with a 세무사.
 const TAX_RESERVE_RATE = 0.2;
@@ -56,6 +61,12 @@ export async function render({ backend, status }) {
   const expected = sum(ventures.filter((v) => v.status === 'active'), (v) => v.expected_monthly_revenue);
   const demo = [...accounts, ...txs, ...receivables, ...obligations].some((r) => r.is_demo);
 
+  const liquidAccounts = accounts.filter((a) => a.liquid);
+  const verified = sum(liquidAccounts.filter((a) => a.source === 'bank_csv'), (a) => a.balance);
+  const unverified = liquid - verified;
+  const review = txs.filter((t) => t.needs_review);
+  const bankAccounts = accounts.filter((a) => !a.is_demo);
+
   return {
     title: 'Cash Desk',
     actions: html`<button data-new="transactions">+ 실제 입출금</button><button data-new="receivables">+ 계약·청구</button><button data-new="obligations">+ 세금·납부</button>`,
@@ -75,6 +86,58 @@ export async function render({ backend, status }) {
       ${demo ? html`<div class="source" style="margin:-6px 0 14px">DEMO 데이터가 포함되어 있습니다. 내 실제 돈을 보려면 설정에서 데모를 삭제하세요.</div>` : ''}
 
       <h2 class="ledger-title"><span>1</span> 실제 — 통장에 들어오고 나간 돈</h2>
+      <div class="kpis">
+        ${kpi({ label: '은행 내역으로 검증된 잔액', value: won(verified), kindTag: 'actual', sub: `${liquidAccounts.filter((a) => a.source === 'bank_csv').length}개 계좌 · 은행이 만든 거래내역 파일 기준`, src: '아래 "은행 거래내역 가져오기"로 갱신' })}
+        ${kpi({ label: '직접 입력한 잔액 (미검증)', value: won(unverified), kindTag: 'actual', sub: unverified ? '은행 앱에서 확인한 숫자가 맞는지 주기적으로 대조하세요' : '미검증 잔액 없음', src: '계좌·자산에 손으로 적은 잔액' })}
+        ${kpi({ label: '분류 대기 거래', value: `${review.length}건`, sub: review.length ? '분류 전에는 사업 매출·사업 비용에 들어가지 않습니다' : '모두 분류됨', src: '은행 파일에서 가져온 거래' })}
+      </div>
+
+      <section class="card section">
+        <div class="card-head"><div><h2>계좌별 잔액과 출처</h2><p>잔액 기준일이 오래되면 실제 잔액과 다를 수 있습니다. 7일 넘게 지난 잔액은 노란색.</p></div><button data-new="accounts">+ 계좌</button></div>
+        ${table([
+          { label: '계좌', primary: true, cell: (a) => html`<strong>${a.name}</strong><br><span class="muted small">${label(ACCOUNT_KINDS, a.kind)}${a.liquid ? '' : ' · 즉시 사용 불가'}</span>` },
+          { label: '출처', cell: (a) => srcPill(a.source) },
+          { label: '기준일', cell: (a) => (daysBetween(a.as_of, today) > 7 ? pill(`${a.as_of} (${daysBetween(a.as_of, today)}일 전)`, 'warn') : a.as_of) },
+          { label: '잔액', num: true, cell: (a) => won(a.balance) },
+          { label: '', cell: (a) => rowActions('accounts', a) },
+        ], accounts, { empty: '계좌가 없습니다. "+ 계좌"로 입출금 통장을 먼저 만든 뒤 거래내역 파일을 가져오세요.' })}
+      </section>
+
+      <section class="card section" id="bank-import">
+        <div class="card-head"><div><h2>은행 거래내역 가져오기 (CSV)</h2>
+          <p>은행 앱·인터넷뱅킹 → 거래내역조회 → 엑셀/CSV 저장 → 여기서 선택. 파일은 이 PC 안에서만 읽고, 은행에 접속하거나 비밀번호를 묻지 않습니다. 같은 파일을 다시 넣어도 중복은 건너뜁니다.
+          엑셀(.xls/.xlsx)이면 엑셀에서 "다른 이름으로 저장 → CSV"로 바꿔 주세요.</p></div></div>
+        ${bankAccounts.length ? html`
+          <div class="bank-import-row" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0">
+            <label>계좌 <select id="bi-account">${bankAccounts.map((a) => html`<option value="${a.id}">${a.name}</option>`)}</select></label>
+            <input type="file" id="bi-file" accept=".csv,.txt,.tsv,text/csv" />
+          </div>
+          <div id="bi-preview"></div>`
+        : html`<div class="empty">먼저 "+ 계좌"로 계좌를 하나 만드세요 (잔액은 0으로 두면 파일의 잔액으로 채워집니다).</div>`}
+      </section>
+
+      ${review.length ? html`<section class="card section">
+        <div class="card-head"><div><h2>분류 대기 ${pill(`${review.length}건`, 'warn')}</h2><p>수정 버튼으로 사업 매출/사업 비용/개인 비용을 지정하면 대기 목록에서 빠집니다. 지정 전에는 개인 수입·개인 지출로 계산됩니다.</p></div></div>
+        ${table([
+          { label: '날짜', cell: (t) => t.date },
+          { label: '내용', primary: true, cell: (t) => t.description || '—' },
+          { label: '구분', cell: (t) => (t.direction === 'income' ? pill('입금', 'good') : pill('출금', '')) },
+          { label: '금액', num: true, cell: (t) => won(t.amount) },
+          { label: '', cell: (t) => rowActions('transactions', t) },
+        ], review.slice(0, 50))}
+        ${review.length > 50 ? html`<p class="muted small">최근 50건만 표시. 나머지는 Finance에서.</p>` : ''}
+      </section>` : ''}
+
+      <details class="card section">
+        <summary><strong>왜 은행에 바로 연결하지 않나요?</strong> (자동 연동 조사 결과)</summary>
+        <ul>
+          <li><b>금융결제원 오픈뱅킹</b>: 이용기관 심사를 통과한 사업자만 실제 계좌 API를 쓸 수 있습니다. 개인 개발자는 테스트베드(가짜 데이터)만 가능합니다.</li>
+          <li><b>마이데이터</b>: 금융위원회 허가를 받은 사업자 전용입니다. 개인 앱이 직접 받을 수 없습니다.</li>
+          <li><b>CODEF 등 스크래핑 API</b>: 사업자 계약이 필요하고, 공동/금융인증서를 앱에 맡기는 방식이라 보안 부담이 큽니다. 비밀번호·인증서를 이 앱에 저장하지 않는다는 원칙과 맞지 않아 쓰지 않습니다.</li>
+          <li><b>현실적인 방법</b>: 뱅크샐러드·토스 같은 허가받은 앱으로 잔액을 확인하고, 이 앱에는 은행 거래내역 파일을 월 1–2회 가져옵니다. 이 앱은 송금·결제 기능이 없으며 앞으로도 넣지 않습니다.</li>
+        </ul>
+      </details>
+
       <div class="kpis">
         ${kpi({ label: '가용 자금 (즉시 사용 가능 계좌)', value: won(liquid), kindTag: 'actual', src: `계좌·자산 ${accounts.filter((a) => a.liquid).length}개의 잔액 합계` })}
         ${kpi({ label: `${month} 사업 매출 입금`, value: won(mRevenue), kindTag: 'actual', sub: `매출 외 입금 ${won(mIn - mRevenue)} (지원금·생활비 등, 매출 아님)`, src: 'Finance 수입 중 수입 유형 = 사업 매출' })}
@@ -127,4 +190,69 @@ export async function render({ backend, status }) {
         ])}
       </section>`,
   };
+}
+
+// Korean banks usually export CP949 (EUC-KR); newer ones UTF-8.
+function decode(buf) {
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(buf); }
+  catch { return new TextDecoder('euc-kr').decode(buf); }
+}
+
+export function mount(root, { backend }) {
+  const file = root.querySelector('#bi-file');
+  const box = root.querySelector('#bi-preview');
+  if (!file || !box) return;
+  let pending = null;
+
+  const show = (content) => { box.innerHTML = String(content); };
+
+  file.addEventListener('change', async () => {
+    pending = null;
+    const f = file.files?.[0];
+    if (!f) return show('');
+    const parsed = parseBankStatement(decode(await f.arrayBuffer()));
+    if (parsed.error) return show(html`<div class="empty">${parsed.error}</div>`);
+    const account_id = Number(root.querySelector('#bi-account').value);
+    const body = { account_id, rows: parsed.transactions, keys: importKeys(parsed.transactions), closing: parsed.closing };
+    try {
+      const dry = await backend.post('/bank-import', { ...body, dry_run: true });
+      pending = body;
+      const inc = parsed.transactions.filter((t) => t.direction === 'income');
+      const exp = parsed.transactions.filter((t) => t.direction === 'expense');
+      const s = (rows) => rows.reduce((n, t) => n + t.amount, 0);
+      const c = parsed.cols;
+      show(html`
+        <p><b>${f.name}</b>: 거래 ${parsed.transactions.length}건 (입금 ${won(s(inc))} · 출금 ${won(s(exp))}),
+          새로 추가 <b>${dry.created}건</b>, 이미 있음 ${dry.duplicates}건${parsed.skipped.length ? `, 건너뛴 줄 ${parsed.skipped.length}개 (합계·빈 줄 등)` : ''}.</p>
+        <p class="muted small">인식한 열: 날짜 "${c.headers[c.date]}"${c.amount >= 0 ? ` · 금액 "${c.headers[c.amount]}"` : ` · 출금 "${c.headers[c.out] ?? '없음'}" · 입금 "${c.headers[c.in] ?? '없음'}"`} · 잔액 "${c.balance >= 0 ? c.headers[c.balance] : '없음'}" · 내용 "${c.description >= 0 ? c.headers[c.description] : '없음'}"</p>
+        <p>${parsed.closing ? html`가져오면 이 계좌 잔액을 <b>${won(parsed.closing.balance)}</b> (${parsed.closing.as_of} 기준, 은행 내역 검증)으로 바꿉니다.` : '파일에 잔액 열이 없어 계좌 잔액은 바꾸지 않습니다.'}</p>
+        ${table([
+          { label: '날짜', cell: (t) => t.date },
+          { label: '내용', primary: true, cell: (t) => t.description || '—' },
+          { label: '구분', cell: (t) => (t.direction === 'income' ? '입금' : '출금') },
+          { label: '금액', num: true, cell: (t) => won(t.amount) },
+          { label: '잔액', num: true, cell: (t) => (t.balance === null ? '—' : won(t.balance)) },
+        ], parsed.transactions.slice(0, 8))}
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button id="bi-go" ${dry.created || parsed.closing ? '' : 'disabled'}>${dry.created}건 가져오기</button>
+          <button id="bi-cancel" class="link">취소</button>
+        </div>`);
+    } catch (err) {
+      show(html`<div class="empty">${err.message}</div>`);
+    }
+  });
+
+  box.addEventListener('click', async (e) => {
+    if (e.target.id === 'bi-cancel') { file.value = ''; pending = null; return show(''); }
+    if (e.target.id !== 'bi-go' || !pending) return;
+    e.target.disabled = true;
+    try {
+      const r = await backend.post('/bank-import', pending);
+      toast(`${r.created}건 가져옴 · 중복 ${r.duplicates}건 건너뜀${r.balanceUpdated ? ' · 잔액 갱신(검증)' : ''}`);
+      window.dispatchEvent(new Event('oo:reload'));
+    } catch (err) {
+      toast(err.message, true);
+      e.target.disabled = false;
+    }
+  });
 }

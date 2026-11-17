@@ -147,6 +147,18 @@ export const MIGRATIONS = [
     ${ts}
   );
   `,
+  // Provenance: where each balance and transaction came from.
+  //   source = 'bank_csv' → read from a statement file the bank produced
+  //   source = 'manual'   → typed in by hand
+  // Imported rows start with needs_review = 1 until classified.
+  `
+  ALTER TABLE accounts ADD COLUMN source TEXT NOT NULL DEFAULT 'manual';
+  ALTER TABLE transactions ADD COLUMN source TEXT NOT NULL DEFAULT 'manual';
+  ALTER TABLE transactions ADD COLUMN account_id INTEGER REFERENCES accounts(id) ON DELETE SET NULL;
+  ALTER TABLE transactions ADD COLUMN import_key TEXT;
+  ALTER TABLE transactions ADD COLUMN needs_review INTEGER NOT NULL DEFAULT 0;
+  CREATE UNIQUE INDEX transactions_import_key ON transactions(account_id, import_key) WHERE import_key IS NOT NULL;
+  `,
 ];
 
 export function migrate(db) {
