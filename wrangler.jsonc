@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "owners-office",
+  "main": "src/worker/index.js",
+  "compatibility_date": "2025-10-01",
+  // One SQLite-backed Durable Object holds the owner's database.
+  "durable_objects": {
+    "bindings": [{ "name": "OFFICE", "class_name": "OfficeDO" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["OfficeDO"] }],
+  "observability": { "enabled": true }
+}

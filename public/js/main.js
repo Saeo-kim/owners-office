@@ -59,7 +59,9 @@ async function refreshStatus() {
       <button class="link" data-action="toggle-demo">${status.settings.include_demo ? '데모 제외하고 보기' : '데모 포함해서 보기'}</button>
       <button class="link danger" data-action="delete-demo">데모 전체 삭제</button>`);
   } else banner.hidden = true;
-  $('#mode-note').innerHTML = backend.mode === 'server'
+  $('#mode-note').innerHTML = status.mode === 'cloud'
+    ? '클라우드 · 데이터는 Cloudflare Durable Object SQLite에 저장되며 비밀번호로 보호됩니다.'
+    : backend.mode === 'server'
     ? '로컬 모드 · 데이터는 이 PC의 <code>data/office.db</code>에 저장됩니다.'
     : '웹 모드 · 데이터는 이 브라우저(IndexedDB)에만 저장되며 서버로 전송되지 않습니다. 설정에서 백업하세요.';
 }

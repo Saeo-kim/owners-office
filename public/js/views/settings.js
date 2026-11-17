@@ -10,7 +10,7 @@ export async function render({ backend }) {
     title: 'Settings & Data',
     body: html`<div class="cols-2">
       <section class="card section">
-        <div class="card-head"><div><h2>데이터 현황</h2><p>${s.mode === 'server' ? '로컬 모드: 이 PC의 SQLite 파일 (data/office.db)' : '웹 모드: 이 브라우저의 IndexedDB (서버 전송 없음)'}</p></div></div>
+        <div class="card-head"><div><h2>데이터 현황</h2><p>${s.mode === 'cloud' ? '클라우드: Cloudflare Durable Object SQLite (비밀번호로 보호)' : s.mode === 'server' ? '로컬 모드: 이 PC의 SQLite 파일 (data/office.db)' : '웹 모드: 이 브라우저의 IndexedDB (서버 전송 없음)'}</p></div></div>
         ${table([
           { label: '종류', cell: (r) => r.name, primary: true },
           { label: '실제 데이터', cell: (r) => `${r.real}건`, num: true },

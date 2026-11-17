@@ -31,8 +31,19 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (event) => {
+  // Cache each shell file on its own. One file that cannot be fetched (for
+  // example a passcode challenge answered with 401) must not stop the worker
+  // from activating; the rest is still cached and runtime caching fills the gaps.
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(SHELL.map((p) => new URL(p, self.registration.scope)))),
+    caches.open(CACHE).then((cache) =>
+      Promise.allSettled(
+        SHELL.map(async (p) => {
+          const url = new URL(p, self.registration.scope);
+          const res = await fetch(url);
+          if (res.ok) await cache.put(url, res);
+        }),
+      ),
+    ),
   );
   self.skipWaiting();
 });

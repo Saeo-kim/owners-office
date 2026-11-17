@@ -15,9 +15,13 @@
     "test:e2e": "node tests/e2e/run.js",
     "test:e2e:pages": "npm run build:pages && node tests/e2e/run.js --dist",
     "build:pages": "node scripts/build-pages.js",
-    "check": "node scripts/check.js"
+    "check": "node scripts/check.js",
+    "build:worker": "node scripts/build-worker.js",
+    "dev:worker": "npm run build:worker && wrangler dev",
+    "deploy": "npm run build:worker && wrangler deploy"
   },
   "devDependencies": {
-    "sql.js": "1.14.2"
+    "sql.js": "1.14.2",
+    "wrangler": "^4.0.0"
   }
 }
