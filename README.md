@@ -59,10 +59,55 @@ npm start
 | 실제 데이터와 데모 데이터 구분 | 모든 행에 `is_demo`. 사용자가 입력한 행은 항상 실제 데이터. DEMO 배지, 배너, 분석 제외 토글, 일괄 삭제 제공 |
 | 인건비와 유지비 분리 | 비용 분류 `labor`(인건비)와 `product_service`(제품·서비스 유지비)를 따로 집계 |
 
+## AI 팀원 API (CFO)
+
+OWNER'S OFFICE는 FOCUS FLOW의 AI 팀원 **CFO**로 동작할 수 있습니다. FOCUS FLOW가 업무를 보내면 이 앱이 계산해 보고서를 돌려줍니다. 두 앱은 DB를 공유하지 않습니다.
+
+| 환경 변수 | 설명 |
+| --- | --- |
+| `OFFICE_AGENT_TOKEN` | 32자 이상의 임의 문자열. **비우면 API가 꺼져 있고 `/api/agent/*`는 404** |
+
+```powershell
+$env:OFFICE_AGENT_TOKEN = "<32자 이상 임의 문자열>"
+npm start
+```
+
+FOCUS FLOW에도 같은 값을 넣습니다 (`application-local.properties`, 저장소에 올라가지 않음). 토큰은 `Authorization: Bearer` 헤더로만 전달되며 상수 시간으로 비교합니다.
+
+| 메서드·경로 | 설명 |
+| --- | --- |
+| `GET /api/agent/health` | 상태와 업무 유형 목록 |
+| `POST /api/agent/tasks` | 업무 접수. `{ external_ref, title, instructions?, kind?, requested_by? }`. 같은 `external_ref`를 다시 보내면 새로 만들지 않고 기존 항목을 돌려줍니다 (재시도 안전) |
+| `GET /api/agent/tasks?external_ref=&status=` | 업무 목록 (최근순) |
+| `GET /api/agent/tasks/{id}` | 업무 한 건, 상태 변화 이력(`events`), 결과 |
+
+업무 상태는 `queued → in_progress → completed | failed`입니다. 접수된 업무는 5초 안에 처리됩니다.
+
+| `kind` | 내용 |
+| --- | --- |
+| `monthly_report` | 월간 재무 보고서 (기본값) |
+| `financial_analysis` | 최근 3개월 사업 손익, 프로젝트별 손익 |
+| `cash_flow` | 가용자금, 평균 순현금흐름, 자금 소진 예상 |
+| `bookkeeping` | 장부 정리 현황 (사업 미연결 거래, 설명 없는 거래, 오래된 잔액) |
+| `tax_summary` | 세무 준비 자료 (신고 대행 아님, 세무사 검토 필요) |
+| `portfolio` | 투자 자산 합계 (계좌 단위 입력 잔액, 시세 조회 없음) |
+| `planning` | 자금 소진 예상, 목표 달성 현황과 권고 |
+| `risk_audit` | 감사 규칙의 높음·보통 위험 항목 |
+
+`kind`를 비우면 제목과 지시 내용의 키워드로 고릅니다 (예: "세금" → `tax_summary`). 기간은 현재 월입니다.
+
+**보고서에 담기는 것**: 집계 수치, 감사 항목, 권고, 한계(`limitations`). 계좌 이름, 계좌 메모, 거래 설명과 원장 행은 포함하지 않습니다. 데이터가 없으면 추정하지 않고 `null`과 한계 문구를 씁니다. 데모 데이터가 섞였는지는 `includes_demo`로 알 수 있습니다.
+
+```bash
+curl -s -X POST http://127.0.0.1:4320/api/agent/tasks \
+  -H "Authorization: Bearer $OFFICE_AGENT_TOKEN" -H "Content-Type: application/json" \
+  -d '{"external_ref":"demo-1","title":"11월 월간 보고서"}'
+```
+
 ## 테스트
 
 ```powershell
-npm test               # 단위·API·HTTP 테스트 35개, node:sqlite와 sql.js 결과 비교 포함
+npm test               # 단위·API·HTTP·AI 팀원 API 테스트 43개, node:sqlite와 sql.js 결과 비교 포함
 npm run check          # 모든 JS 문법과 import 경로 확인
 npm run test:e2e       # 설치된 Edge/Chrome으로 데스크톱·375px 화면 전체와 CRUD 흐름 확인
 npm run test:e2e:pages # Pages 빌드(웹 모드)로 같은 브라우저 테스트

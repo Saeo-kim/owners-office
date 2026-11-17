@@ -117,6 +117,36 @@ export const MIGRATIONS = [
   );
   CREATE INDEX work_logs_date ON work_logs(date);
   `,
+
+  // v2 · AI 팀원(CFO) 업무 큐. 새 테이블 두 개만 추가하며 기존 테이블은 바꾸지 않습니다.
+  `
+  CREATE TABLE agent_tasks (
+    id INTEGER PRIMARY KEY,
+    agent TEXT NOT NULL,
+    external_ref TEXT UNIQUE,
+    kind TEXT NOT NULL,
+    title TEXT NOT NULL,
+    instructions TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'queued',
+    summary TEXT NOT NULL DEFAULT '',
+    result TEXT,
+    error TEXT NOT NULL DEFAULT '',
+    requested_by TEXT NOT NULL DEFAULT '',
+    started_at TEXT,
+    completed_at TEXT,
+    ${ts}
+  );
+  CREATE INDEX agent_tasks_status ON agent_tasks(status);
+
+  CREATE TABLE agent_task_events (
+    id INTEGER PRIMARY KEY,
+    task_id INTEGER NOT NULL REFERENCES agent_tasks(id) ON DELETE CASCADE,
+    status TEXT NOT NULL,
+    message TEXT NOT NULL DEFAULT '',
+    at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+  );
+  CREATE INDEX agent_task_events_task ON agent_task_events(task_id);
+  `,
 ];
 
 export function migrate(db) {

@@ -69,7 +69,11 @@ function serveStatic(req, res, pathname) {
   res.end('Not found');
 }
 
-export function createHttpServer(api) {
+/**
+ * `agent` is optional: when given, /api/agent/* is routed to it (token-protected, see server/agent.js).
+ * Without it those paths answer 404, so the agent API does not exist unless it is switched on.
+ */
+export function createHttpServer(api, { agent = null } = {}) {
   return createServer(async (req, res) => {
     // This app holds personal finances and has no login, so it only answers
     // requests addressed to this computer (blocks DNS-rebinding tricks too).
@@ -79,13 +83,16 @@ export function createHttpServer(api) {
       if (req.method !== 'GET' && req.method !== 'HEAD') return sendJson(res, 405, { error: '허용되지 않는 메서드입니다.' });
       return serveStatic(req, res, decodeURIComponent(url.pathname));
     }
+    const isAgent = url.pathname === '/api/agent' || url.pathname.startsWith('/api/agent/');
+    if (isAgent && !agent) return sendJson(res, 404, { error: '경로를 찾을 수 없습니다.' });
     try {
       let body = null;
       if (['POST', 'PUT'].includes(req.method)) {
         if (!/^application\/json\b/i.test(req.headers['content-type'] ?? '')) return sendJson(res, 415, { error: 'Content-Type은 application/json이어야 합니다.' });
         body = await readBody(req);
       }
-      const { status, body: out } = api.handle({ method: req.method, path: url.pathname, query: Object.fromEntries(url.searchParams), body });
+      const input = { method: req.method, path: url.pathname, query: Object.fromEntries(url.searchParams), body, headers: req.headers };
+      const { status, body: out } = isAgent ? agent.handle(input) : api.handle(input);
       sendJson(res, status, out);
     } catch (err) {
       sendJson(res, err.status ?? 500, { error: err.status ? err.message : '서버 오류가 발생했습니다.' });
