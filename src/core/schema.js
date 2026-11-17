@@ -117,6 +117,36 @@ export const MIGRATIONS = [
   );
   CREATE INDEX work_logs_date ON work_logs(date);
   `,
+  `
+  CREATE TABLE receivables (
+    id INTEGER PRIMARY KEY,
+    client TEXT NOT NULL,
+    title TEXT NOT NULL,
+    amount INTEGER NOT NULL CHECK (amount > 0),
+    status TEXT NOT NULL DEFAULT 'contract',
+    venture_id INTEGER REFERENCES ventures(id) ON DELETE SET NULL,
+    contract_date TEXT,
+    due_date TEXT,
+    paid_on TEXT,
+    note TEXT NOT NULL DEFAULT '',
+    is_demo INTEGER NOT NULL DEFAULT 0,
+    ${ts}
+  );
+
+  CREATE TABLE obligations (
+    id INTEGER PRIMARY KEY,
+    kind TEXT NOT NULL,
+    title TEXT NOT NULL,
+    amount INTEGER NOT NULL CHECK (amount > 0),
+    estimated INTEGER NOT NULL DEFAULT 1,
+    due_date TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'upcoming',
+    paid_on TEXT,
+    note TEXT NOT NULL DEFAULT '',
+    is_demo INTEGER NOT NULL DEFAULT 0,
+    ${ts}
+  );
+  `,
 ];
 
 export function migrate(db) {

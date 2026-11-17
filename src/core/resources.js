@@ -160,5 +160,43 @@ export const RESOURCES = {
   },
 };
 
+// Added for the Cash Desk. Receivables are promises, not cash: when money
+// arrives, record it as a transaction and mark the receivable paid.
+RESOURCES.receivables = {
+  table: 'receivables',
+  label: '받을 돈 (계약·청구)',
+  order: "CASE status WHEN 'invoiced' THEN 0 WHEN 'contract' THEN 1 WHEN 'paid' THEN 2 ELSE 3 END, due_date, id",
+  fields: {
+    client: text('거래처 (고객)', { required: true, max: 80 }),
+    title: text('내용', { required: true, max: 120, help: '예: 랜딩 페이지 제작 잔금' }),
+    amount: money('금액 (원)', { required: true, min: 1 }),
+    status: choice('상태', E.RECEIVABLE_STATUS, { required: true, default: 'contract' }),
+    venture_id: ref('관련 사업', 'ventures'),
+    contract_date: date('계약일'),
+    due_date: date('입금 예정일'),
+    paid_on: date('입금일', { help: '입금되면 Finance에 수입(사업 매출)으로도 기록하세요' }),
+    note: area('메모', { max: 1000 }),
+  },
+  check(r, errors) {
+    if (r.status === 'paid' && !r.paid_on) errors.paid_on = '입금 완료라면 입금일을 입력하세요.';
+  },
+};
+
+RESOURCES.obligations = {
+  table: 'obligations',
+  label: '나갈 돈 (세금·납부 의무)',
+  order: "CASE status WHEN 'upcoming' THEN 0 ELSE 1 END, due_date, id",
+  fields: {
+    kind: choice('종류', E.OBLIGATION_KINDS, { required: true, default: 'income_tax' }),
+    title: text('내용', { required: true, max: 120, help: '예: 2026년 귀속 종합소득세' }),
+    amount: money('금액 (원, 모르면 추정치)', { required: true, min: 1 }),
+    estimated: { type: 'bool', label: '금액이 추정치임', default: true },
+    due_date: date('납부 기한', { required: true }),
+    status: choice('상태', E.OBLIGATION_STATUS, { required: true, default: 'upcoming' }),
+    paid_on: date('납부일'),
+    note: area('메모', { max: 1000 }),
+  },
+};
+
 export const RESOURCE_NAMES = Object.keys(RESOURCES);
 export const isResource = (name) => Object.hasOwn(RESOURCES, name);

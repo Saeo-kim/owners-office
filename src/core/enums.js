@@ -113,4 +113,24 @@ export const VALUE_KINDS = pairs({
   actual: '실제',
 });
 
+// Money that is promised but not yet in the bank. Never added to 매출.
+export const RECEIVABLE_STATUS = pairs({
+  contract: '계약 확정 (미청구)',
+  invoiced: '청구함 (미입금)',
+  paid: '입금 완료',
+  cancelled: '취소',
+});
+
+// Money I must pay: taxes and other fixed obligations.
+export const OBLIGATION_KINDS = pairs({
+  vat: '부가가치세',
+  income_tax: '종합소득세',
+  local_tax: '지방소득세',
+  insurance: '국민연금·건강보험',
+  card: '카드 대금',
+  loan: '대출 상환',
+  other: '기타 납부',
+});
+export const OBLIGATION_STATUS = pairs({ upcoming: '납부 예정', paid: '납부 완료' });
+
 export const SEVERITY = pairs({ high: '높음', medium: '보통', low: '낮음', info: '참고' });

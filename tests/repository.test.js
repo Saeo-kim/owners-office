@@ -13,6 +13,8 @@ test('creates, reads, updates and deletes every resource', () => {
     transactions: [{ date: '2026-11-02', direction: 'income', amount: 5000, income_type: 'business_revenue', venture_id: v.body.id }, { amount: 6000 }],
     plans: [{ goal_id: g.body.id, title: '계획' }, { status: 'done' }],
     worklogs: [{ date: '2026-11-03', task: '개발', category: 'build', minutes: 90 }, { output: '배포' }],
+    receivables: [{ client: '고객사', title: '잔금', amount: 300000, status: 'invoiced', venture_id: v.body.id, due_date: '2026-11-30' }, { note: '확인' }],
+    obligations: [{ kind: 'vat', title: '부가세', amount: 50000, due_date: '2027-01-25' }, { status: 'paid' }],
   };
   for (const [resource, [create, patch]] of Object.entries(samples)) {
     const c = call('POST', `/${resource}`, create);

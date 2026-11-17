@@ -10,8 +10,11 @@ import * as productivity from './views/productivity.js';
 import * as audit from './views/audit.js';
 import * as settings from './views/settings.js';
 import * as playbook from './views/playbook.js';
+import * as cash from './views/cash.js';
+import * as help from './views/help.js';
 
 const ROUTES = [
+  { path: 'cash', label: 'Cash Desk', ko: '현금 장부: 실제 돈', view: cash, icon: '<path d="M3 7h18v10H3z"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4M18 10v4"/>' },
   { path: 'dashboard', label: 'Executive Dashboard', ko: '경영 대시보드', view: dashboard, icon: '<path d="M4 13h6V4H4zM14 20h6v-9h-6zM14 4v4h6V4zM4 20h6v-4H4z"/>' },
   { path: 'finance', label: 'Finance', ko: '재무', view: finance, icon: '<path d="M12 3v18M17 7H9.5a3 3 0 0 0 0 6h5a3 3 0 0 1 0 6H6"/>' },
   { path: 'employees', label: 'Employees', ko: '직원 (제품·서비스)', view: employees, icon: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>' },
@@ -21,6 +24,7 @@ const ROUTES = [
   { path: 'audit', label: 'Audit & Review', ko: '감사·검증', view: audit, icon: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>' },
   { path: 'playbook', label: 'CEO Playbook', ko: '경영 플레이북', view: playbook, icon: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11M9 8h6"/>' },
   { sep: true },
+  { path: 'help', label: 'Help & Guide', ko: '도움말', view: help, icon: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.5"/>' },
   { path: 'settings', label: 'Settings & Data', ko: '설정·데이터', view: settings, icon: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>' },
 ];
 

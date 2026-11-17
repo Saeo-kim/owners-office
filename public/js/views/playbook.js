@@ -2,6 +2,7 @@
 // strategy notes for each business idea. Strategy text is guidance, not data:
 // nothing here is added to any total. "Ventures에 등록" opens the normal form.
 import { html, pill, raw, won, num } from '../ui.js';
+import { TABS2, VIEWS2 } from './playbook2.js';
 
 const TABS = [
   ['health', '회사 건강 점검'],
@@ -263,12 +264,14 @@ function music() {
 }
 
 export async function render({ backend, query, status }) {
-  const tab = TABS.some(([k]) => k === query.tab) ? query.tab : 'health';
-  const views = { health: () => health(backend, status), direction, academy, online, human, music };
+  const all = [...TABS, ...TABS2];
+  const tab = all.some(([k]) => k === query.tab) ? query.tab : 'health';
+  const views = { health: () => health(backend, status), direction, academy, online, human, music, ...VIEWS2 };
   const body = await views[tab]();
   return {
     title: 'CEO Playbook',
-    body: html`<nav class="pb-tabs" aria-label="플레이북 주제">${TABS.map(([k, l]) => html`<a href="#/playbook?tab=${k}" ${k === tab ? html`aria-current="page"` : ''}>${l}</a>`)}</nav>
+    body: html`<nav class="pb-tabs" aria-label="플레이북 주제"><span class="pb-tabs-label">운영</span>${TABS.map(([k, l]) => html`<a href="#/playbook?tab=${k}" ${k === tab ? html`aria-current="page"` : ''}>${l}</a>`)}</nav>
+      <nav class="pb-tabs" aria-label="사업 전략과 원칙"><span class="pb-tabs-label">전략·원칙</span>${TABS2.map(([k, l]) => html`<a href="#/playbook?tab=${k}" ${k === tab ? html`aria-current="page"` : ''}>${l}</a>`)}</nav>
       <div class="pb-body">${body}</div>`,
   };
 }

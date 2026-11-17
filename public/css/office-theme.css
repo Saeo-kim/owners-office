@@ -1,0 +1,122 @@
+/*
+ * OWNER'S OFFICE — "Ledger & Boardroom" theme.
+ * Design only: re-skins existing classes. Remove the <link> to restore the
+ * original look. No feature, layout logic or data depends on this file.
+ *
+ * Identity: a private-bank / financial-reporting desk. Banker-green sidebar
+ * with brass rules, white statement paper with ledger lines, tabular numbers,
+ * double rules under totals, uppercase report captions.
+ */
+
+:root {
+  --bg: #eef0ec;
+  --surface: #ffffff;
+  --surface-2: #f4f6f2;
+  --border: #d9ddd5;
+  --text: #121a17;
+  --text-2: #3f4a45;
+  --muted: #6c7670;
+  --accent: #0f3d33;      /* banker green */
+  --accent-2: #146c56;
+  --accent-soft: #e3efe9;
+  --brass: #a8822f;
+  --ink: #0b1f1a;
+  --good-text: #0a6b45;
+  --critical-text: #a8201a;
+  --radius: 3px;
+  --shadow: 0 1px 0 rgba(15, 61, 51, .06);
+  --num: "Cascadia Mono", "Consolas", "D2Coding", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c1311; --surface: #121b18; --surface-2: #17221e; --border: #26342f;
+    --text: #e8eee9; --text-2: #b8c4bd; --muted: #85928b;
+    --accent: #7cc7ab; --accent-2: #5fb596; --accent-soft: #15302a; --brass: #d0ab5b; --ink: #050a09;
+    --good-text: #6fd3a3; --critical-text: #f08a80;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c1311; --surface: #121b18; --surface-2: #17221e; --border: #26342f;
+  --text: #e8eee9; --text-2: #b8c4bd; --muted: #85928b;
+  --accent: #7cc7ab; --accent-2: #5fb596; --accent-soft: #15302a; --brass: #d0ab5b; --ink: #050a09;
+  --good-text: #6fd3a3; --critical-text: #f08a80;
+}
+
+/* ── Sidebar: the boardroom panel ─────────────────────── */
+.sidebar { background: #0f2a24; border-right: 0; box-shadow: inset -1px 0 0 #07160f, inset -4px 0 0 var(--brass); color: #d7e3dd; }
+.brand { border-bottom: 1px solid rgba(255, 255, 255, .1); padding: 22px 18px; }
+.brand svg { color: #e6c879; }
+.brand strong { color: #fff; font-size: 15px; letter-spacing: .18em; }
+.brand span { color: #a9bdb3; letter-spacing: .06em; text-transform: uppercase; font-size: 10px; }
+nav#nav a { color: #c3d3cb; border-radius: 2px; font-size: 13px; letter-spacing: .01em; }
+nav#nav a:hover { background: rgba(255, 255, 255, .06); color: #fff; }
+nav#nav a[aria-current="page"] { background: rgba(230, 200, 121, .14); color: #fff; box-shadow: inset 3px 0 0 #e6c879; }
+nav#nav a[href="#/cash"] { margin-bottom: 6px; border: 1px solid rgba(230, 200, 121, .35); color: #f3e1ad; font-weight: 700; }
+.nav-sep { border-color: rgba(255, 255, 255, .1) !important; background: rgba(255, 255, 255, .1); }
+.sidebar-foot { color: #93a89e; border-top-color: rgba(255, 255, 255, .1); }
+.sidebar-foot code { color: #e6c879; }
+
+/* ── Top bar: statement header ────────────────────────── */
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); box-shadow: 0 2px 0 var(--accent); }
+.topbar h1 { font-size: 13px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); }
+.topbar h1::before { content: "OWNER'S OFFICE  /  "; color: var(--muted); font-weight: 600; letter-spacing: .14em; }
+
+/* ── Report cards ─────────────────────────────────────── */
+.card { border-radius: var(--radius); border: 1px solid var(--border); border-top: 2px solid var(--accent); box-shadow: var(--shadow); }
+.card-head h2, .pb-section h2 { font-size: 12.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.card-head p { letter-spacing: 0; text-transform: none; }
+
+/* KPIs read like lines in a financial statement */
+.kpi { border-radius: var(--radius); border: 1px solid var(--border); border-left: 3px solid var(--brass); box-shadow: none; background: var(--surface); }
+.kpi-label { text-transform: uppercase; letter-spacing: .08em; font-size: 10.5px; font-weight: 700; color: var(--muted); }
+.kpi-value { font-family: var(--num); font-weight: 700; font-size: 21px; letter-spacing: -.02em; color: var(--ink); }
+:root[data-theme="dark"] .kpi-value { color: var(--text); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .kpi-value { color: var(--text); } }
+.kpi-value.neg, .neg { color: var(--critical-text); }
+
+/* Ledger tables */
+th { background: var(--surface-2); color: var(--accent); text-transform: uppercase; letter-spacing: .08em; font-size: 10.5px; border-bottom: 2px solid var(--accent); }
+td { border-bottom: 1px solid var(--border); }
+tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--surface-2) 55%, transparent); }
+tbody tr:hover td { background: var(--accent-soft); }
+td.num, th.num { font-family: var(--num); font-variant-numeric: tabular-nums; }
+tfoot td { border-top: 1px solid var(--text); border-bottom: 3px double var(--text); background: var(--surface); }
+
+/* Buttons: understated, firm */
+button, .btn { border-radius: 2px; }
+button.primary, .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; letter-spacing: .02em; }
+:root[data-theme="dark"] button.primary { color: #06120e; }
+
+/* Value-kind tags stay distinct: actual is the only solid one */
+.vk { border-radius: 2px; letter-spacing: .04em; }
+.vk-actual { background: var(--good-text); color: #fff; border-color: var(--good-text); }
+
+/* ── Cash Desk ────────────────────────────────────────── */
+.cash-hero {
+  display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 0;
+  margin-bottom: 18px; border: 1px solid var(--accent); border-radius: var(--radius); overflow: hidden;
+  background: var(--surface);
+}
+.cash-hero-main { padding: 22px 24px; background: linear-gradient(135deg, #0f3d33, #0b2a24); color: #fff; }
+.cash-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #e6c879; display: flex; gap: 8px; align-items: center; }
+.cash-big { margin: 6px 0 4px; font: 700 40px/1.1 var(--num); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.cash-big.neg { color: #ffb4ab; }
+.cash-formula { font: 12px var(--num); color: #b9d0c6; }
+.cash-hero-side { display: grid; }
+.cash-hero-side > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+.cash-hero-side > div:last-child { border-bottom: 0; }
+.cash-hero-side span { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.cash-hero-side strong { font: 700 17px var(--num); }
+.ledger-title { display: flex; align-items: center; gap: 10px; margin: 22px 0 10px; font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+.ledger-title span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; letter-spacing: 0; }
+
+/* Playbook tab rows */
+.pb-tabs-label { align-self: center; margin-right: 4px; font-size: 10.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); min-width: 64px; }
+nav.pb-tabs a { border-radius: 2px; }
+nav.pb-tabs a[aria-current="page"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+@media (max-width: 760px) {
+  .cash-hero { grid-template-columns: 1fr; }
+  .cash-big { font-size: 32px; }
+  .topbar h1::before { content: ""; }
+}

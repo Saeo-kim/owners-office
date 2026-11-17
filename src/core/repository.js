@@ -204,7 +204,7 @@ export function createRepository(db) {
     return tx(() => {
       let removed = 0;
       // Children first so ON DELETE rules never touch real rows unexpectedly.
-      for (const t of ['work_logs', 'plans', 'transactions', 'goals', 'employees', 'ventures', 'accounts']) {
+      for (const t of ['receivables', 'obligations', 'work_logs', 'plans', 'transactions', 'goals', 'employees', 'ventures', 'accounts']) {
         removed += db.run(`DELETE FROM ${t} WHERE is_demo = 1`).changes;
       }
       return { removed };
@@ -220,7 +220,7 @@ export function createRepository(db) {
   // Replaces everything. Ids are preserved so links between records survive.
   function importAll(payload) {
     if (payload?.format !== 'owners-office' || !payload.records) throw new ValidationError({ _: 'OWNER\'S OFFICE 백업 파일이 아닙니다.' });
-    const order = ['accounts', 'employees', 'ventures', 'goals', 'plans', 'transactions', 'worklogs'];
+    const order = ['accounts', 'employees', 'ventures', 'goals', 'plans', 'transactions', 'worklogs', 'receivables', 'obligations'];
     return tx(() => {
       for (const name of [...order].reverse()) db.run(`DELETE FROM ${RESOURCES[name].table}`);
       let imported = 0;
