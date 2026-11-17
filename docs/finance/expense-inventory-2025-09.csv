@@ -1,0 +1,20 @@
+date,merchant,item,amount_krw,payment_method,category,verified,note
+2025-09-03,돌돌파스타,돌돌파스타,15500,카드,Other personal expenses,yes,"식비 sheet, payment method given"
+2025-09-04,교내카페,녹차스무디,4500,,Other personal expenses,yes,payment method missing
+2025-09-07,대구편의점,(삼각)김밥,5000,,Other personal expenses,yes,payment method missing
+2025-09-08,자연드림,조합비,10000,,Other personal expenses,review,member fee (조합비); category may be Housing and utilities; payment method missing
+2025-09-12,탑마트,신라면투움바,1460,,Other personal expenses,yes,payment method missing
+2025-09-12,탑마트,두유,3280,,Other personal expenses,yes,payment method missing
+2025-09-12,탑마트,닭가슴살,6700,,Other personal expenses,yes,payment method missing
+2025-09-12,편의점,미쯔,700,,Other personal expenses,yes,payment method missing
+2025-09-12,탑마트,메론,8900,,Other personal expenses,yes,payment method missing
+2025-09-12,탑마트,프링글스1+1,3300,,Other personal expenses,yes,payment method missing; note says for family member
+2025-09-13,GS편의점,(item not recorded),4400,,Other personal expenses,review,item missing
+2025-09-13,GS편의점,(item not recorded),2700,,Other personal expenses,review,item missing
+2025-09-16,이마트24,"붉닭,프링글스",5800,,Other personal expenses,yes,payment method missing
+2025-09-16,이마트24,미쯔,700,,Other personal expenses,yes,"same item as 2025-09-12; different date, not treated as duplicate"
+2025-09-16,GS편의점,(item not recorded),2100,,Other personal expenses,review,item missing
+2025-09-17,이마트24,"불닭당면, 바질닭가슴살, 프링글스",12700,,Other personal expenses,yes,payment method missing
+2025-09-17,GS편의점,"김치치즈면,치즈불닭, 말차브륄레",7800,,Other personal expenses,yes,payment method missing
+2025-09-07,대구편의점,쓰레기봉다리,40,,Other personal expenses,review,"생필품 sheet: amount column shows '40원' in the date-adjacent column; column order looks shifted, confirm amount"
+2025-09-08,편의점,마스크,6500,,Other personal expenses,review,생필품 sheet; 'mask' bought for volunteer prep; confirm amount and whether business-related
