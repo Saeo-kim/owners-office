@@ -281,3 +281,22 @@ dialog::backdrop { background: rgba(0, 0, 0, .4); }
 @media (forced-colors: active) {
   .bar > span { background: Highlight; }
 }
+
+/* CEO Playbook */
+nav.pb-tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 0 14px; }
+nav.pb-tabs a { padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; font-size: 13px; }
+.pb-body { display: grid; gap: 16px; max-width: 980px; }
+.pb-section p { margin: 0 0 10px; line-height: 1.65; color: var(--text-2); }
+.pb-section p strong, .pb-list strong { color: var(--text); }
+.pb-list { margin: 0 0 12px; padding-left: 20px; display: grid; gap: 7px; line-height: 1.6; color: var(--text-2); }
+.pb-h3 { margin: 16px 0 8px; }
+.pb-table td, .pb-table th { vertical-align: top; line-height: 1.5; }
+.pb-signals { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-bottom: 10px; }
+.pb-signal { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); }
+.pb-signal-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+.pb-signal-top strong { font-size: 13px; }
+.pb-signal p { margin: 0; font-size: 13px; color: var(--text-2); line-height: 1.5; }
+.pb-checks { display: grid; gap: 6px; margin-bottom: 10px; }
+.pb-check { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; line-height: 1.5; }
+.pb-check input { width: auto; margin-top: 4px; }
+.pb-check:has(input:checked) span { color: var(--muted); text-decoration: line-through; }

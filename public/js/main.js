@@ -9,6 +9,7 @@ import * as goals from './views/goals.js';
 import * as productivity from './views/productivity.js';
 import * as audit from './views/audit.js';
 import * as settings from './views/settings.js';
+import * as playbook from './views/playbook.js';
 
 const ROUTES = [
   { path: 'dashboard', label: 'Executive Dashboard', ko: '경영 대시보드', view: dashboard, icon: '<path d="M4 13h6V4H4zM14 20h6v-9h-6zM14 4v4h6V4zM4 20h6v-4H4z"/>' },
@@ -18,6 +19,7 @@ const ROUTES = [
   { path: 'goals', label: 'Strategy & Goals', ko: '전략·목표', view: goals, icon: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".5"/>' },
   { path: 'productivity', label: 'Productivity', ko: '생산성', view: productivity, icon: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M10 2h4"/>' },
   { path: 'audit', label: 'Audit & Review', ko: '감사·검증', view: audit, icon: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>' },
+  { path: 'playbook', label: 'CEO Playbook', ko: '경영 플레이북', view: playbook, icon: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11M9 8h6"/>' },
   { sep: true },
   { path: 'settings', label: 'Settings & Data', ko: '설정·데이터', view: settings, icon: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>' },
 ];
