@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { splitStatements } from '../src/worker/sql-adapter.js';
 import { createOffice, runApiRequest } from '../src/worker/office.js';
-import { authorize } from '../src/worker/auth.js';
+import { checkPasscode, isAuthenticated, sessionCookie, clearedSessionCookie } from '../src/worker/auth.js';
 
 function fakeCtx() {
   const raw = new DatabaseSync(':memory:');
@@ -70,10 +70,25 @@ test('data written in one office instance is still there after reopening the sam
   assert.equal(status.body.settings.max_active_ventures, 9);
 });
 
-test('passcode gate fails closed without a secret and checks Basic auth', () => {
-  const req = (auth) => new Request('https://example.test/', auth ? { headers: { Authorization: auth } } : {});
-  assert.equal(authorize(req(null), {}).status, 503);
-  assert.equal(authorize(req(null), { OWNER_PASSCODE: 'secret' }).status, 401);
-  assert.equal(authorize(req('Basic ' + btoa('owner:wrong')), { OWNER_PASSCODE: 'secret' }).status, 401);
-  assert.equal(authorize(req('Basic ' + btoa('owner:secret')), { OWNER_PASSCODE: 'secret' }), null);
+test('passcode check is exact and fails closed without a secret', () => {
+  assert.equal(checkPasscode('secret-value', { OWNER_PASSCODE: 'secret-value' }), true);
+  assert.equal(checkPasscode('secret-valu', { OWNER_PASSCODE: 'secret-value' }), false);
+  assert.equal(checkPasscode(undefined, { OWNER_PASSCODE: 'secret-value' }), false);
+  assert.equal(checkPasscode('', {}), false);
+});
+
+test('session cookie is HttpOnly, Secure, SameSite=Strict and verifies only with the same passcode', async () => {
+  const env = { OWNER_PASSCODE: 'correct-horse-battery' };
+  const cookie = await sessionCookie(env);
+  assert.match(cookie, /HttpOnly/);
+  assert.match(cookie, /Secure/);
+  assert.match(cookie, /SameSite=Strict/);
+  const value = /oo_session=([^;]+)/.exec(cookie)[1];
+  const req = (v) => new Request('https://example.test/api/status', { headers: { Cookie: `oo_session=${v}` } });
+  assert.equal(await isAuthenticated(req(value), env), true);
+  assert.equal(await isAuthenticated(req(value), { OWNER_PASSCODE: 'changed-passcode' }), false, 'changing the passcode signs out');
+  const [exp] = value.split('.');
+  assert.equal(await isAuthenticated(req(`${exp}.forged`), env), false);
+  assert.equal(await isAuthenticated(new Request('https://example.test/api/status'), env), false, 'no cookie');
+  assert.match(clearedSessionCookie(), /Max-Age=0/);
 });

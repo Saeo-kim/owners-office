@@ -47,6 +47,60 @@ function renderNav(active) {
 
 let backend;
 let status;
+let loginShown = false;
+
+// Passcode login panel. Shown when the API answers 401 (no or expired session).
+function showLogin(message = '') {
+  if (loginShown) return;
+  loginShown = true;
+  document.querySelector('#boot')?.remove();
+  $('#topbar-actions').innerHTML = '';
+  $('#menu-btn').hidden = true;
+  $('#demo-banner').hidden = true;
+  $('#mode-note').textContent = '';
+  main.innerHTML = `<section class="login card" aria-labelledby="login-title">
+    <div class="login-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v9M9 10v9M15 10v9M19 10v9M3 19h18"/></svg></div>
+    <h2 id="login-title">OWNER'S OFFICE</h2>
+    <p>개인 경영 데이터를 보호하기 위해 비밀번호를 입력해야 합니다.</p>
+    <form id="login-form" class="login-form">
+      <label for="login-pass">비밀번호</label>
+      <input id="login-pass" name="passcode" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+      <button class="primary" type="submit">열기</button>
+      <div id="login-error" class="login-error" role="alert">${message}</div>
+    </form>
+  </section>`;
+  $('#login-pass').focus();
+}
+
+document.addEventListener('submit', async (e) => {
+  if (e.target.id !== 'login-form') return;
+  e.preventDefault();
+  const passcode = $('#login-pass').value;
+  const button = e.target.querySelector('button');
+  button.disabled = true;
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ passcode }),
+    });
+    if (res.ok) {
+      loginShown = false;
+      location.reload();
+      return;
+    }
+    $('#login-error').textContent = res.status === 503
+      ? '서버 비밀번호가 설정되지 않았습니다. 관리자에게 문의하세요.'
+      : '비밀번호가 올바르지 않습니다.';
+    $('#login-pass').select();
+  } catch {
+    $('#login-error').textContent = '연결할 수 없습니다. 인터넷 연결을 확인하세요.';
+  } finally {
+    button.disabled = false;
+  }
+});
+
+window.addEventListener('oo:auth-required', () => showLogin());
 let renderSeq = 0;
 
 async function refreshStatus() {
@@ -91,6 +145,7 @@ async function render() {
 async function reload() {
   await refreshStatus();
   await render();
+  document.querySelector('#boot')?.remove();
 }
 
 function closeMenu() {
@@ -167,7 +222,9 @@ window.addEventListener('oo:reload', reload);
     backend = await createBackend();
     await reload();
   } catch (err) {
+    if (err.status === 401) return showLogin();
     console.error(err);
+    document.querySelector('#boot')?.remove();
     main.innerHTML = String(html`<div class="empty">데이터 저장소를 열지 못했습니다: ${err.message}</div>`);
   }
 })();

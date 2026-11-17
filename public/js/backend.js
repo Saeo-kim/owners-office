@@ -29,6 +29,7 @@ export async function createBackend() {
         body: body === undefined ? undefined : JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
+      if (res.status === 401) window.dispatchEvent(new Event('oo:auth-required'));
       if (!res.ok) throw new ApiError(res.status, data);
       return data;
     }, 'server');

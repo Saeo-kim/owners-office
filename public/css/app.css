@@ -294,3 +294,29 @@ html { -webkit-text-size-adjust: 100%; }
 @media (forced-colors: active) {
   .bar > span { background: Highlight; }
 }
+
+/* ---------- passcode login ---------- */
+.login { max-width: 380px; margin: 8vh auto 0; padding: 28px 24px; text-align: center; }
+.login-mark { width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 16px; background: var(--accent); display: grid; place-items: center; }
+.login-mark svg { width: 30px; height: 30px; fill: none; stroke: var(--surface); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.login h2 { margin: 0 0 6px; letter-spacing: .12em; font-size: 16px; }
+.login p { margin: 0 0 20px; color: var(--muted); font-size: 13px; }
+.login-form { display: grid; gap: 10px; text-align: left; }
+.login-form label { font-size: 13px; color: var(--text-2); font-weight: 600; }
+.login-form button { min-height: 46px; justify-content: center; font-size: 15px; }
+.login-error { min-height: 1.4em; color: var(--critical-text); font-size: 13px; text-align: center; }
+
+/* ---------- dashboard polish ---------- */
+.topbar h1 { font-weight: 700; letter-spacing: -.01em; }
+.kpi-value { font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.card, .kpi { border-radius: 14px; }
+@media (max-width: 860px) {
+  .topbar { gap: 10px; }
+  .topbar-actions { width: 100%; }
+  .topbar-actions > * { flex: 1 1 auto; }
+  .topbar-actions button, .topbar-actions .btn, .topbar-actions input, .topbar-actions select { min-height: 44px; }
+  .card { padding: 16px; }
+}
+@media (max-width: 860px) {
+  .topbar-actions > * { justify-content: center; }
+}
