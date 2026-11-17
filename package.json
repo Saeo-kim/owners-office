@@ -11,7 +11,7 @@
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning server/index.js",
     "dev": "node --disable-warning=ExperimentalWarning --watch server/index.js",
-    "test": "node --disable-warning=ExperimentalWarning --test tests/",
+    "test": "node --disable-warning=ExperimentalWarning --test tests/*.test.js",
     "test:e2e": "node tests/e2e/run.js",
     "test:e2e:pages": "npm run build:pages && node tests/e2e/run.js --dist",
     "build:pages": "node scripts/build-pages.js",

@@ -40,6 +40,16 @@ export async function render({ backend }) {
         <div class="source">불러오기는 현재 데이터를 모두 바꿉니다. 먼저 백업하세요.</div>
       </section>
       <section class="card section">
+        <div class="card-head"><div><h2>아이폰 홈 화면에 설치</h2><p>앱처럼 전체 화면으로 실행됩니다.</p></div></div>
+        <ol class="small" style="margin:0;padding-left:20px;display:grid;gap:6px">
+          <li>아이폰 <strong>Safari</strong>에서 이 주소를 엽니다. (Chrome 등 다른 브라우저는 홈 화면 설치를 지원하지 않습니다.)</li>
+          <li>하단의 <strong>공유</strong> 버튼(네모에 위쪽 화살표)을 누릅니다.</li>
+          <li><strong>홈 화면에 추가</strong>를 선택하고 이름을 확인한 뒤 <strong>추가</strong>를 누릅니다.</li>
+          <li>홈 화면의 OWNER'S OFFICE 아이콘으로 실행합니다. 주소창 없이 열리면 설치된 것입니다.</li>
+        </ol>
+        <div class="source">주의: 홈 화면 앱과 Safari는 저장 공간이 분리되어 있습니다. 데이터를 옮기려면 Safari에서 백업 파일을 내려받고 홈 화면 앱에서 불러오세요. 데이터는 서버로 전송되지 않고 이 기기에만 저장됩니다.</div>
+      </section>
+      <section class="card section">
         <div class="card-head"><h2>경영 원칙</h2></div>
         <ul class="small" style="margin:0;padding-left:18px;display:grid;gap:4px">
           <li>목표·계획·예상·실제를 따로 저장하고 각각 다른 표시로 보여줍니다.</li>

@@ -2,11 +2,22 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <!-- "server" = local Node + SQLite file. The Pages build rewrites this to "browser". -->
   <meta name="oo-mode" content="server">
   <title>OWNER'S OFFICE</title>
+  <meta name="description" content="개인 사업 경영 시스템: 재무, 직원(제품·서비스), 사업, 목표, 생산성, 감사.">
+  <!-- PWA: installable web app (Android/Chrome, and iOS "Add to Home Screen") -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#fcfcfb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1a1a19" media="(prefers-color-scheme: dark)">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Owner's Office">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
   <link rel="stylesheet" href="css/app.css">
   <script type="module" src="js/main.js"></script>
 </head>

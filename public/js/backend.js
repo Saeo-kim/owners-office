@@ -77,12 +77,11 @@ function loadScript(src) {
 }
 
 async function createBrowserBackend() {
-  const [{ createApi }, { createRepository }, { migrate }, { wrapSqlJs }, { seedDemo }] = await Promise.all([
+  const [{ createApi }, { createRepository }, { migrate }, { wrapSqlJs }] = await Promise.all([
     import('../core/api.js'),
     import('../core/repository.js'),
     import('../core/schema.js'),
     import('../core/sqljs-adapter.js'),
-    import('../core/seed.js'),
   ]);
   await loadScript('vendor/sql-wasm.js');
   const SQL = await window.initSqlJs({ locateFile: (f) => `vendor/${f}` });
@@ -102,10 +101,9 @@ async function createBrowserBackend() {
       console.warn('IndexedDB 저장 실패', err);
     }
   };
-  if (!repo.getSettings().demo_seeded) {
-    seedDemo(repo);
-    await persist();
-  }
+  // No demo data on the phone or Pages build: every number must come from what
+  // the owner enters. Demo data can still be added from Settings, and it is
+  // always flagged DEMO and excluded from figures when the toggle is off.
   const api = createApi({ repo, mode: 'browser' });
   return wrap(async (method, path, body) => {
     const url = new URL(path, 'http://local');

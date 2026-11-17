@@ -24,4 +24,16 @@ if (!html.includes('content="browser"')) throw new Error('mode meta not found in
 writeFileSync(indexPath, html);
 writeFileSync(join(out, '.nojekyll'), '');
 if (!existsSync(join(out, 'core', 'api.js'))) throw new Error('core not copied');
+
+// Service worker: give every build its own cache name so old shells are dropped.
+const swPath = join(out, 'sw.js');
+const sw = readFileSync(swPath, 'utf8');
+if (!sw.includes('__BUILD_ID__')) throw new Error('build id placeholder not found in sw.js');
+const buildId = (process.env.GITHUB_SHA ?? '').slice(0, 12) || `local-${Date.now().toString(36)}`;
+writeFileSync(swPath, sw.replaceAll('__BUILD_ID__', buildId));
+
+// PWA files that must ship for install and offline use.
+for (const f of ['manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png', 'sw.js']) {
+  if (!existsSync(join(out, f))) throw new Error(`PWA file missing from build: ${f}`);
+}
 console.log(`Built ${out}`);

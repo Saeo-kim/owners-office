@@ -77,7 +77,9 @@ async function startStatic() {
 
 async function startBrowser() {
   const port = 9300 + Math.floor(Math.random() * 300);
-  const p = spawn(browserPath, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${port}`, `--user-data-dir=${join(tmp, 'profile')}`, '--no-first-run', 'about:blank'], { stdio: 'ignore' });
+  // E2E_NO_SANDBOX=1 is only for containers where Chromium runs as root.
+  const sandbox = process.env.E2E_NO_SANDBOX ? ['--no-sandbox'] : [];
+  const p = spawn(browserPath, ['--headless=new', '--disable-gpu', ...sandbox, `--remote-debugging-port=${port}`, `--user-data-dir=${join(tmp, 'profile')}`, '--no-first-run', 'about:blank'], { stdio: 'ignore' });
   procs.push(p);
   for (let i = 0; i < 50; i++) {
     try {

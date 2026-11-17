@@ -12,7 +12,7 @@ Node.js 22.13 이상이 필요합니다. 런타임 의존성은 없습니다.
 npm start
 ```
 
-<http://localhost:4320>을 엽니다. 첫 실행 때 **DEMO** 표시가 붙은 데모 데이터가 추가됩니다. 설정 화면이나 상단 배너에서 한 번에 삭제할 수 있고, 삭제한 뒤에는 다시 생기지 않습니다.
+<http://localhost:4320>을 엽니다. 로컬 모드는 첫 실행 때 **DEMO** 표시가 붙은 데모 데이터를 추가합니다. (웹 모드, 즉 공개 주소와 아이폰 앱은 빈 상태로 시작하며 데모 데이터는 설정 화면에서 직접 넣을 수 있습니다.) 설정 화면이나 상단 배너에서 한 번에 삭제할 수 있고, 삭제한 뒤에는 다시 생기지 않습니다.
 
 | 환경 변수 | 기본값 | 설명 |
 | --- | --- | --- |
@@ -62,15 +62,45 @@ npm start
 ## 테스트
 
 ```powershell
-npm test               # 단위·API·HTTP 테스트 35개, node:sqlite와 sql.js 결과 비교 포함
+npm test               # 단위·API·HTTP 테스트 41개(PWA 매니페스트·아이콘 포함), node:sqlite와 sql.js 결과 비교 포함
 npm run check          # 모든 JS 문법과 import 경로 확인
 npm run test:e2e       # 설치된 Edge/Chrome으로 데스크톱·375px 화면 전체와 CRUD 흐름 확인
 npm run test:e2e:pages # Pages 빌드(웹 모드)로 같은 브라우저 테스트
+# 컨테이너에서 root로 실행하는 경우: E2E_NO_SANDBOX=1 BROWSER=/path/to/chrome npm run test:e2e
 ```
 
 ## 배포
 
-`main`에 push하면 GitHub Actions가 테스트를 실행한 뒤 `npm run build:pages`의 결과(`dist/`)를 GitHub Pages에 배포합니다.
+`main` 또는 `claude/owners-office-mobile-app-memvkh` 브랜치에 push하면 GitHub Actions가 테스트를 실행한 뒤 `npm run build:pages`의 결과(`dist/`)를 GitHub Pages에 배포합니다. GitHub Pages 사이트는 저장소당 하나이므로, 마지막으로 배포된 브랜치의 내용이 공개 주소에 보입니다.
+
+공개 주소: `https://saeo-kim.github.io/owners-office/`
+
+웹 모드 빌드에는 서버가 없고 데이터가 전혀 전송되지 않습니다. 공개 주소를 알아도 다른 사람의 데이터에 접근할 수 없습니다. 각 기기의 데이터는 그 기기의 브라우저에만 있습니다.
+
+## 아이폰에 앱으로 설치 (PWA)
+
+Owner's Office는 설치형 웹 앱(PWA)입니다. 앱 스토어 없이 홈 화면에 추가하면 주소창 없이 전체 화면으로 실행되고, 인터넷이 없어도 마지막으로 불러온 화면이 열립니다.
+
+1. 아이폰에서 **Safari**로 `https://saeo-kim.github.io/owners-office/`를 엽니다. Chrome 등 다른 브라우저는 iOS에서 홈 화면 설치를 지원하지 않습니다.
+2. 하단의 **공유** 버튼(네모에 위쪽 화살표)을 누릅니다.
+3. 목록을 아래로 내려 **홈 화면에 추가**를 누릅니다.
+4. 이름(Owner's Office)을 확인하고 **추가**를 누릅니다.
+5. 홈 화면의 OWNER'S OFFICE 아이콘으로 실행합니다.
+
+설정 화면(**설정·데이터**)에도 같은 안내가 있습니다.
+
+**데이터 주의:** 홈 화면 앱과 Safari는 저장 공간이 분리되어 있습니다. Safari에서 쓰던 데이터를 앱으로 옮기려면 Safari에서 **백업 파일 내려받기**를 한 뒤 홈 화면 앱에서 **백업 파일 불러오기**를 하세요.
+
+**업데이트:** 온라인 상태에서 앱을 열면 최신 코드를 받아 옵니다. 변경 사항이 바로 보이지 않으면 앱을 완전히 종료했다가 다시 여세요.
+
+| 구성 | 파일 |
+| --- | --- |
+| 매니페스트 | `public/manifest.webmanifest` (standalone, 세로 방향, 한국어) |
+| 서비스 워커 | `public/sw.js` (앱 셸 사전 저장, 네트워크 우선·오프라인 대체, `/api/` 미저장) |
+| 아이콘 | `public/icons/` (192, 512, maskable 512, iOS 180). `scripts/make-icons.py`로 다시 만들 수 있습니다 |
+| iPhone 메타 태그 | `apple-mobile-web-app-*`, `apple-touch-icon`, `viewport-fit=cover`, 노치·홈 바 여백(safe area) |
+
+서비스 워커는 HTTPS 또는 localhost에서만 등록됩니다. 로컬 모드(`npm start`)에서는 `127.0.0.1`만 열리므로 아이폰에서는 사용할 수 없습니다. 아이폰에서는 공개 주소(웹 모드)를 사용하세요.
 
 ## 구조
 
@@ -87,7 +117,7 @@ src/core/          브라우저와 Node가 함께 쓰는 코드
   sqljs-adapter.js 브라우저용 SQLite 어댑터
 server/            node:http 서버와 node:sqlite 어댑터
 public/            UI (Vanilla JS, 해시 라우터, SVG 차트)
-scripts/           Pages 빌드, 문법 확인
+scripts/           Pages 빌드, 문법 확인, 아이콘 생성(make-icons.py)
 tests/             단위·HTTP 테스트, e2e/ 브라우저 테스트
 ```
 

@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "OWNER'S OFFICE",
+  "short_name": "Owner's Office",
+  "description": "개인 사업 경영 시스템: 재무, 직원(제품·서비스), 사업, 목표, 생산성, 감사.",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f5f2",
+  "theme_color": "#1d3a5f",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

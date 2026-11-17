@@ -2,7 +2,7 @@ name: Test and deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, claude/owners-office-mobile-app-memvkh]
   pull_request:
   workflow_dispatch:
 
@@ -29,12 +29,12 @@ jobs:
       - run: npm test
       - run: npm run build:pages
       - uses: actions/upload-pages-artifact@v3
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/claude/owners-office-mobile-app-memvkh'
         with:
           path: dist
 
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/claude/owners-office-mobile-app-memvkh'
     needs: test
     runs-on: ubuntu-latest
     environment:

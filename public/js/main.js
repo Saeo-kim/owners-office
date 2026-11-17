@@ -169,3 +169,11 @@ window.addEventListener('oo:reload', reload);
     main.innerHTML = String(html`<div class="empty">데이터 저장소를 열지 못했습니다: ${err.message}</div>`);
   }
 })();
+
+// Offline-capable PWA: service workers need HTTPS (or localhost).
+// Registration failures are non-fatal; the app still works online.
+if ('serviceWorker' in navigator && window.isSecureContext) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch((err) => console.warn('service worker not registered:', err));
+  });
+}
